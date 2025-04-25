@@ -1,8 +1,17 @@
 import numpy as np
 import pandas as pd
+from pathlib import Path
+
+def get_file_in_same_directory_pathlib(filename):
+    # Get the directory of the current script
+    dir_path = Path(__file__).parent
+    # Construct the full path to the file
+    file_path = dir_path / filename
+    return str(file_path)
 
 # Load your datasets
-file_path = './ESB_adoption_dataset_v6_update_august_2023.xlsx'
+filename = 'ESB_adoption_dataset_v6_update_august_2023.xlsx'
+file_path = get_file_in_same_directory_pathlib(filename)
 xls = pd.ExcelFile(file_path)
 
 # Load the "Sheet 1. District-level data"
@@ -10,6 +19,7 @@ district_level_data = pd.read_excel(xls, sheet_name='Sheet 1. District-level dat
 
 # Load the transition data for ESB adoption phases
 transition_data_clean = district_level_data[['1b. Local Education Agency (LEA) or entity name', 
+                                             '3a. Number of ESBs committed',
                                              '3c. Number of ESBs awarded', 
                                              '3d. Number of ESBs ordered', 
                                              '3e. Number of ESBs delivered', 
@@ -44,6 +54,7 @@ state_to_index = {
 }
 
 # Iterate through the cleaned data and calculate weighted transitions
+print(merged_data.columns)
 for i in range(1, len(merged_data)):
     prev_row = merged_data.iloc[i-1]
     curr_row = merged_data.iloc[i]
@@ -69,8 +80,10 @@ for i in range(1, len(merged_data)):
 # Normalize the transition matrix to get probabilities, taking into account both characteristics
 weighted_transition_matrix_prob = weighted_transition_matrix / weighted_transition_matrix.sum(axis=1, keepdims=True)
 
-# Display the weighted transition matrix (you can display it in the appropriate format based on your interface)
-import ace_tools as tools; tools.display_dataframe_to_user(name="Weighted Transition Matrix with Characteristics", dataframe=pd.DataFrame(weighted_transition_matrix_prob, columns=list(state_columns.keys()), index=list(state_columns.keys())))
+# Create a pandas DataFrame for better display
+transition_matrix_df = pd.DataFrame(weighted_transition_matrix_prob, 
+                                    columns=list(state_columns.keys()), 
+                                    index=list(state_columns.keys()))
 
-# Show the weighted matrix
-print(weighted_transition_matrix_prob)
+# Display the weighted transition matrix using pandas
+print(transition_matrix_df)
