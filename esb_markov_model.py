@@ -54,7 +54,7 @@ state_to_index = {
 }
 
 # Iterate through the cleaned data and calculate weighted transitions
-print(merged_data.columns)
+# print(merged_data)
 for i in range(1, len(merged_data)):
     prev_row = merged_data.iloc[i-1]
     curr_row = merged_data.iloc[i]
@@ -74,16 +74,31 @@ for i in range(1, len(merged_data)):
         # If there is a transition (i.e., a change from one phase to another), update the transition matrix
         if prev_count != curr_count:
             prev_state_idx = state_to_index[phase]
-            curr_state_idx = state_to_index[phase]
-            weighted_transition_matrix[prev_state_idx, curr_state_idx] += weight
+            
+            # Determine the target state (phase_to) based on the current row
+            for phase_to, column_to in state_columns.items():
+                if curr_row[column_to] > prev_row[column_to]:  # Transition to a new state
+                    curr_state_idx = state_to_index[phase_to]
+                    weighted_transition_matrix[prev_state_idx, curr_state_idx] += weight
+                    break
 
-# Normalize the transition matrix to get probabilities, taking into account both characteristics
-weighted_transition_matrix_prob = weighted_transition_matrix / weighted_transition_matrix.sum(axis=1, keepdims=True)
+# Normalize the transition matrix to get probabilities, handling division by zero
+row_sums = weighted_transition_matrix.sum(axis=1, keepdims=True)
+weighted_transition_matrix_prob = np.divide(
+    weighted_transition_matrix,
+    row_sums,
+    where=row_sums != 0
+)
+
+# Replace NaN values with zeros (if any remain)
+weighted_transition_matrix_prob = np.nan_to_num(weighted_transition_matrix_prob)
 
 # Create a pandas DataFrame for better display
-transition_matrix_df = pd.DataFrame(weighted_transition_matrix_prob, 
-                                    columns=list(state_columns.keys()), 
-                                    index=list(state_columns.keys()))
+transition_matrix_df = pd.DataFrame(
+    weighted_transition_matrix_prob,
+    columns=list(state_columns.keys()),
+    index=list(state_columns.keys())
+)
 
-# Display the weighted transition matrix using pandas
+# Display the weighted transition matrix
 print(transition_matrix_df)
