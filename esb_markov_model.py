@@ -63,8 +63,13 @@ for i in range(1, len(merged_data)):
     num_students = prev_row['4b. Number of students in district']
     perc_free_reduced = prev_row['4e. Percentage of students in district eligible for free or reduced lunch']
     
+    # Replace NaN values with 0
+    num_students = 0 if pd.isna(num_students) else num_students
+    perc_free_reduced = 0 if pd.isna(perc_free_reduced) else perc_free_reduced
+
     # Calculate the weight for the transition based on both characteristics
     weight = num_students * (perc_free_reduced / 100)  # Weighting by the number of students and the percentage eligible for free/reduced lunch
+
     
     # Check transitions for each state, weighted by the combined characteristic
     for phase, column in state_columns.items():
@@ -80,6 +85,7 @@ for i in range(1, len(merged_data)):
                 if curr_row[column_to] > prev_row[column_to]:  # Transition to a new state
                     curr_state_idx = state_to_index[phase_to]
                     weighted_transition_matrix[prev_state_idx, curr_state_idx] += weight
+                    #print(weighted_transition_matrix[prev_state_idx, curr_state_idx])
                     break
 
 # Normalize the transition matrix to get probabilities, handling division by zero
