@@ -25,11 +25,11 @@ transition_data_clean = district_level_data[['1b. Local Education Agency (LEA) o
                                              '3e. Number of ESBs delivered', 
                                              '3f. Number of ESBs operating']]
 
-# Merge with district-level characteristics (students and free/reduced lunch percentage)
+# Merge with district-level characteristics
 merged_data = transition_data_clean.merge(district_level_data[['1b. Local Education Agency (LEA) or entity name', 
-                                                             '4b. Number of students in district', 
-                                                             '4e. Percentage of students in district eligible for free or reduced lunch',
-                                                             '4g. Percent of population below the poverty level']], 
+                                                             '4t. Percent two or more races', 
+                                                             '5b. Percent non-white and/or Hispanic',
+                                                             ]], 
                                           on='1b. Local Education Agency (LEA) or entity name', 
                                           how='inner')
 
@@ -61,18 +61,16 @@ for i in range(1, len(merged_data)):
     curr_row = merged_data.iloc[i]
     
     # Get the number of students and the percentage of students eligible for free/reduced lunch (to weight the transition)
-    num_students = prev_row['4b. Number of students in district']
-    perc_free_reduced = prev_row['4e. Percentage of students in district eligible for free or reduced lunch']
-    perc_poverty_level = prev_row['4g. Percent of population below the poverty level']
-
-    # Replace NaN values with 0
-    num_students = 0 if pd.isna(num_students) else num_students
-    perc_free_reduced = 0 if pd.isna(perc_free_reduced) else perc_free_reduced
-    perc_poverty_level = 0 if pd.isna(perc_poverty_level) else perc_poverty_level
+    two_or_more_races = prev_row['4t. Percent two or more races']
+    perc_non_white = prev_row['5b. Percent non-white and/or Hispanic']
     
+    # Replace NaN values with 0
+    two_or_more_races = 0 if pd.isna(two_or_more_races) else two_or_more_races
+    perc_non_white = 0 if pd.isna(perc_non_white) else perc_non_white
 
     # Calculate the weight for the transition based on both characteristics
-    weight = num_students * (perc_free_reduced / 100) * (perc_poverty_level / 100)  # Adjusted weight by 3 factors
+    weight = two_or_more_races * (perc_non_white / 100)  # Weighting by the number of students and the percentage eligible for free/reduced lunch
+
     
     # Check transitions for each state, weighted by the combined characteristic
     for phase, column in state_columns.items():
