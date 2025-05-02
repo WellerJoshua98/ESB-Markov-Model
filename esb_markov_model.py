@@ -28,8 +28,7 @@ transition_data_clean = district_level_data[['1b. Local Education Agency (LEA) o
 # Merge with district-level characteristics (students and free/reduced lunch percentage)
 merged_data = transition_data_clean.merge(district_level_data[['1b. Local Education Agency (LEA) or entity name', 
                                                              '4b. Number of students in district', 
-                                                             '4e. Percentage of students in district eligible for free or reduced lunch',
-                                                             '4g. Percent of population below the poverty level']], 
+                                                             '4e. Percentage of students in district eligible for free or reduced lunch']], 
                                           on='1b. Local Education Agency (LEA) or entity name', 
                                           how='inner')
 
@@ -63,16 +62,14 @@ for i in range(1, len(merged_data)):
     # Get the number of students and the percentage of students eligible for free/reduced lunch (to weight the transition)
     num_students = prev_row['4b. Number of students in district']
     perc_free_reduced = prev_row['4e. Percentage of students in district eligible for free or reduced lunch']
-    perc_poverty_level = prev_row['4g. Percent of population below the poverty level']
 
     # Replace NaN values with 0
     num_students = 0 if pd.isna(num_students) else num_students
     perc_free_reduced = 0 if pd.isna(perc_free_reduced) else perc_free_reduced
-    perc_poverty_level = 0 if pd.isna(perc_poverty_level) else perc_poverty_level
     
 
     # Calculate the weight for the transition based on both characteristics
-    weight = num_students * (perc_free_reduced / 100) * (perc_poverty_level / 100)  # Adjusted weight by 3 factors
+    weight = num_students * (perc_free_reduced / 100)   # Adjusted weight
     
     # Check transitions for each state, weighted by the combined characteristic
     for phase, column in state_columns.items():
